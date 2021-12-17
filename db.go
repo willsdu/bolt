@@ -144,6 +144,9 @@ func (db *DB) String() string {
 	return fmt.Sprintf("DB<%q>", db.path)
 }
 
+// Open 根据给定的path创建文件，并且打开
+// 如果文件不存在，那就自动创建
+// 如果options传值nil， bolt会使用默认配置打开数据库
 // Open creates and opens a database at the given path.
 // If the file does not exist then it will be created automatically.
 // Passing in nil options will cause Bolt to open the database with the default options.
@@ -891,16 +894,21 @@ func (db *DB) IsReadOnly() bool {
 	return db.readOnly
 }
 
+// Options 给出了打开一个数据库的所有配置项
 // Options represents the options that can be set when opening a database.
 type Options struct {
+	// Timeout 分配文件块的等待时间
+	// 如果设置0，那就无限期的等下去，这个设置只会在Darwin和Linux有效果
 	// Timeout is the amount of time to wait to obtain a file lock.
 	// When set to zero it will wait indefinitely. This option is only
 	// available on Darwin and Linux.
 	Timeout time.Duration
 
+	// 在内存映射到文件前，设置DB.NoGrouwSync标记
 	// Sets the DB.NoGrowSync flag before memory mapping the file.
 	NoGrowSync bool
 
+	// ReadOnly ,只读方式打开文件块，使用flock(..., LOCK_SH |LOCK_NB) 获取一个文件链接
 	// Open database in read-only mode. Uses flock(..., LOCK_SH |LOCK_NB) to
 	// grab a shared lock (UNIX).
 	ReadOnly bool
@@ -918,7 +926,7 @@ type Options struct {
 	// it takes no effect.
 	InitialMmapSize int
 }
-
+// DefaultOptions 给出了当Open()方法中option传nil时的配置
 // DefaultOptions represent the options used if nil options are passed into Open().
 // No timeout is used which will cause Bolt to wait indefinitely for a lock.
 var DefaultOptions = &Options{
